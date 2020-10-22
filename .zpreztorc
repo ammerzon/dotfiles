@@ -218,6 +218,76 @@ zstyle ':prezto:module:prompt' theme 'powerlevel10k'
 # zstyle ':prezto:module:tmux:session' name 'YOUR DEFAULT SESSION NAME'
 
 #
+# Anaconda
+#
+__conda_setup="$('/usr/local/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/usr/local/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/usr/local/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/usr/local/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+
+#
+# jenv
+#
+# Try to find jenv, if it's not on the path
+export JENV_ROOT="${JENV_ROOT:=${HOME}/.jenv}"
+if ! type jenv > /dev/null && [ -f "${JENV_ROOT}/bin/jenv" ]; then
+    export PATH="${JENV_ROOT}/bin:${PATH}"
+fi
+
+# Lazy load jenv
+if type jenv > /dev/null; then
+    export PATH="${JENV_ROOT}/bin:${JENV_ROOT}/shims:${PATH}"
+    function jenv() {
+        unset -f jenv
+        eval "$(command jenv init -)"
+        jenv $@
+    }
+fi
+
+#
+# pyenv
+#
+# Try to find pyenv, if it's not on the path
+export PYENV_ROOT="${PYENV_ROOT:=${HOME}/.pyenv}"
+if ! type pyenv > /dev/null && [ -f "${PYENV_ROOT}/bin/pyenv" ]; then
+    export PATH="${PYENV_ROOT}/bin:${PATH}"
+fi
+
+# Lazy load pyenv
+if type pyenv > /dev/null; then
+    export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
+    function pyenv() {
+        unset -f pyenv
+        eval "$(command pyenv init -)"
+        if [[ -n "${ZSH_PYENV_LAZY_VIRTUALENV}" ]]; then
+            eval "$(command pyenv virtualenv-init -)"
+        fi
+        pyenv $@
+    }
+fi
+
+#
+# rbenv
+#
+if type rbenv &> /dev/null; then
+  local RBENV_SHIMS="${RBENV_ROOT:-${HOME}/.rbenv}/shims"
+  export PATH="${RBENV_SHIMS}:${PATH}"
+  source $(dirname $(greadlink -f `whence -p rbenv`))/../completions/rbenv.zsh
+  function rbenv() {
+    unset -f rbenv > /dev/null 2>&1
+    eval "$(command rbenv init -)"
+    rbenv "$@"
+  }
+fi
+
+#
 # Utility
 #
 
@@ -239,7 +309,5 @@ alias gclone="git clone"
 alias g="gittower ."
 alias s="code ."
 alias o="open ."
-
-export AWS_PROFILE=dtRoleAccountAdmin
 
 pokemonsay Hello Simon!
